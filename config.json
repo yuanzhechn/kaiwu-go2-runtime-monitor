@@ -1,0 +1,30 @@
+{
+  "host": "0.0.0.0",
+  "port": 8766,
+  "csv_globs": [
+    "/home/unitree/Kaiwu-test/sim2real_test_loco/deploy_loco/runtime/unitree_rl_lab_test/logs/loco/logs/visloco_diag_*.csv"
+  ],
+  "text_log_globs": [
+    "/home/unitree/Kaiwu-test/sim2real_test_loco/deploy_loco/logs/**/*.log",
+    "/home/unitree/Kaiwu-test/sim2real_test_loco/deploy_loco/logs/**/*.txt",
+    "/home/unitree/Kaiwu-test/sim2real_test_loco/deploy_loco/logs/**/*.out",
+    "/home/unitree/Kaiwu-test/sim2real_test_loco/deploy_loco/runtime/unitree_rl_lab_test/logs/loco/**/*.log"
+  ],
+  "process_patterns": [
+    "go2_loco_ctrl",
+    "run_loco_stage_mode.sh"
+  ],
+  "poll_interval_s": 0.25,
+  "process_interval_s": 1.0,
+  "csv_stale_s": 3.0,
+  "uwb_stale_s": 0.5,
+  "sport_stale_s": 0.5,
+  "depth_invalid_warn": 0.85,
+  "depth_invalid_bad": 0.98,
+  "depth_stagnant_frames": 150,
+  "speed_error_warn": 0.20,
+  "inference_warn_ms": 15.0,
+  "loop_warn_ms": 20.0,
+  "history_max_samples": 3000,
+  "log_tail_lines": 120
+}

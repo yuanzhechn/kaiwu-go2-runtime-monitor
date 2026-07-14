@@ -1,0 +1,14 @@
+[Unit]
+Description=Go2 Runtime Monitor
+After=network.target
+
+[Service]
+Type=simple
+User=unitree
+WorkingDirectory=/home/unitree/Kaiwu-test/go2_runtime_monitor
+ExecStart=/usr/bin/python3 /home/unitree/Kaiwu-test/go2_runtime_monitor/server.py --config /home/unitree/Kaiwu-test/go2_runtime_monitor/config.json
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
