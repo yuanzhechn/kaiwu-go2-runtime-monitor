@@ -63,7 +63,7 @@ class MonitorTest(unittest.TestCase):
             "poll_interval_s": 0.05, "process_interval_s": 10,
             "csv_stale_s": 3, "uwb_stale_s": 0.5, "sport_stale_s": 0.5,
             "depth_invalid_warn": 0.85, "depth_invalid_bad": 0.98,
-            "depth_stagnant_frames": 150, "speed_error_warn": 0.2,
+            "depth_stagnant_frames": 150, "speed_error_good": 0.08, "speed_error_warn": 0.15,
             "inference_warn_ms": 15, "loop_warn_ms": 20,
             "history_max_samples": 100, "log_tail_lines": 20,
         }

@@ -366,6 +366,30 @@ class RuntimeMonitor:
         if sample and fresh and sample["feedback"]["valid"]:
             f = sample["feedback"]
             speed_warning = max(abs(f["err_vx"] or 0), abs(f["err_vy"] or 0)) > float(self.config["speed_error_warn"])
+        recent_feedback = [
+            item for item in list(self.history)[-50:]
+            if item.get("feedback", {}).get("valid")
+        ]
+        if not sample or not fresh or not recent_feedback:
+            speed_tracking = level("unknown", "等待速度反馈", "需要新鲜的实际速度数据")
+            speed_metrics = {"mae_vx": None, "mae_vy": None, "mae_wz": None, "window": 0}
+        else:
+            window = len(recent_feedback)
+            mae_vx = sum(abs(item["feedback"]["err_vx"] or 0.0) for item in recent_feedback) / window
+            mae_vy = sum(abs(item["feedback"]["err_vy"] or 0.0) for item in recent_feedback) / window
+            mae_wz = sum(abs(item["feedback"]["err_wz"] or 0.0) for item in recent_feedback) / window
+            speed_metrics = {"mae_vx": mae_vx, "mae_vy": mae_vy, "mae_wz": mae_wz, "window": window}
+            if sample["feedback"]["source"] != "sport":
+                speed_tracking = level(
+                    "warn", "仅 UWB 估算",
+                    f"近 {window} 帧 vx MAE={mae_vx:.3f}m/s；不是独立实测",
+                )
+            elif mae_vx <= float(self.config["speed_error_good"]):
+                speed_tracking = level("good", "跟速正常", f"近 {window} 帧 vx MAE={mae_vx:.3f}m/s")
+            elif mae_vx <= float(self.config["speed_error_warn"]):
+                speed_tracking = level("warn", "跟速有偏差", f"近 {window} 帧 vx MAE={mae_vx:.3f}m/s")
+            else:
+                speed_tracking = level("bad", "跟速异常", f"近 {window} 帧 vx MAE={mae_vx:.3f}m/s")
         return {
             "server_time": now,
             "csv": {
@@ -381,6 +405,8 @@ class RuntimeMonitor:
             "feedback": feedback,
             "inference": inference,
             "speed_warning": speed_warning,
+            "speed_tracking": speed_tracking,
+            "speed_metrics": speed_metrics,
             "process_matches": self.process.matches,
         }
 

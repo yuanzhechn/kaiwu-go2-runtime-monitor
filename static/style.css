@@ -47,6 +47,20 @@ main { padding: 24px clamp(16px, 3vw, 56px) 36px; }
 .panel { min-width: 0; padding: 22px; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); box-shadow: 0 18px 55px rgba(0,0,0,.18); backdrop-filter: blur(14px); }
 .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 20px; }
 .pill, .hint { color: var(--muted); padding: 6px 9px; font-size: 11px; border: 1px solid var(--line); border-radius: 999px; background: rgba(0,0,0,.15); }
+.speed-glance { display: grid; grid-template-columns: minmax(180px,.42fr) minmax(0,1fr); gap: 10px; margin-bottom: 12px; }
+.speed-quality { display: flex; min-height: 132px; flex-direction: column; justify-content: center; padding: 16px; border: 1px solid var(--line); border-radius: 13px; background: rgba(6,15,14,.52); }
+.speed-quality small { color: var(--muted); }.speed-quality strong { margin: 8px 0 5px; font-size: 23px; }.speed-quality p { color: var(--muted); font-size: 11px; line-height: 1.45; }
+.speed-quality.good { border-color: rgba(84,227,154,.36); box-shadow: inset 4px 0 var(--green); }.speed-quality.good strong { color: var(--green); }
+.speed-quality.warn { border-color: rgba(241,185,83,.38); box-shadow: inset 4px 0 var(--amber); }.speed-quality.warn strong { color: var(--amber); }
+.speed-quality.bad { border-color: rgba(255,107,107,.38); box-shadow: inset 4px 0 var(--red); }.speed-quality.bad strong { color: var(--red); }
+.speed-gauges { padding: 11px 14px 8px; border: 1px solid var(--line); border-radius: 13px; background: rgba(6,15,14,.52); }
+.speed-gauge + .speed-gauge { margin-top: 8px; }
+.gauge-title { display: grid; grid-template-columns: 32px 1fr 1fr 1fr; color: var(--muted); font-size: 9px; }.gauge-title strong { color: var(--text); font-size: 11px; }.gauge-title span { text-align: center; }.gauge-title span:last-child { text-align: right; }
+.gauge-track { position: relative; height: 30px; margin: 3px 0 0 32px; border-radius: 8px; background: linear-gradient(90deg, rgba(75,203,211,.05), rgba(255,255,255,.08) 50%, rgba(75,203,211,.05)); border: 1px solid rgba(169,213,197,.08); }
+.gauge-zero { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,.22); }
+.gauge-marker { position: absolute; left: 50%; width: 11px; height: 5px; margin-left: -5px; border-radius: 5px; background: currentColor; box-shadow: 0 0 9px currentColor; transition: left .12s linear; }
+.gauge-marker.theory { top: 3px; color: var(--amber); }.gauge-marker.command { top: 12px; color: var(--cyan); }.gauge-marker.actual { top: 21px; color: var(--green); }
+.gauge-key { display: flex; align-items: center; gap: 10px; margin: 8px 0 0 32px; color: var(--muted); font-size: 9px; }.gauge-key span::before { content:""; display:inline-block; width:10px; height:3px; margin:0 4px 2px 0; border-radius:3px; background:currentColor; }.gauge-key .theory { color:var(--amber); }.gauge-key .command { color:var(--cyan); }.gauge-key .actual { color:var(--green); }.gauge-key em { margin-left:auto; font-style:normal; }
 .velocity-values { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 16px; }
 .velocity-values div, .metric-grid div { padding: 13px; background: rgba(6,15,14,.52); border: 1px solid rgba(169,213,197,.08); border-radius: 12px; }
 .velocity-values strong, .metric-grid strong { display: inline-block; margin-top: 6px; font-size: 23px; font-variant-numeric: tabular-nums; }
@@ -74,4 +88,4 @@ dl { margin: 0; } dl div { display: grid; grid-template-columns: 110px minmax(0,
 pre { height: 250px; margin: 0; padding: 14px; overflow: auto; white-space: pre-wrap; word-break: break-all; color: #b8d9ce; background: #06100e; border: 1px solid var(--line); border-radius: 11px; font: 11px/1.55 "JetBrains Mono", Consolas, monospace; }
 footer { padding: 22px; text-align: center; color: #617971; border-top: 1px solid var(--line); font-size: 12px; }
 @media (max-width: 1180px) { .status-grid { grid-template-columns: repeat(3, 1fr); } .hero-grid { grid-template-columns: 1fr; } }
-@media (max-width: 760px) { .topbar { align-items: flex-start; flex-direction: column; } .connection { width: 100%; } .status-grid, .detail-grid, .bottom-grid { grid-template-columns: 1fr; } .velocity-values { grid-template-columns: repeat(2, 1fr); } .metric-grid, .metric-grid.compact { grid-template-columns: repeat(2, 1fr); } .uwb-health-row { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .topbar { align-items: flex-start; flex-direction: column; } .connection { width: 100%; } .status-grid, .detail-grid, .bottom-grid, .speed-glance { grid-template-columns: 1fr; } .velocity-values { grid-template-columns: repeat(2, 1fr); } .metric-grid, .metric-grid.compact { grid-template-columns: repeat(2, 1fr); } .uwb-health-row { grid-template-columns: 1fr; } .gauge-key em { display:none; } }

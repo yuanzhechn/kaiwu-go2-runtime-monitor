@@ -84,7 +84,7 @@ class LineChart {
     this.canvas.height = Math.round(height * dpr);
     const ctx = this.canvas.getContext("2d");
     ctx.scale(dpr, dpr);
-    const w = rect.width, h = height, pad = {l: 38, r: 10, t: 10, b: 24};
+    const w = rect.width, h = height, pad = {l: 38, r: 108, t: 10, b: 24};
     const plotW = w - pad.l - pad.r, plotH = h - pad.t - pad.b;
     ctx.clearRect(0, 0, w, h);
     const values = [];
@@ -104,15 +104,35 @@ class LineChart {
     const x = i => pad.l + plotW * (this.points.length === 1 ? 1 : i / (this.points.length - 1));
     const y = v => pad.t + (hi - v) / range * plotH;
     this.layout = {pad, plotW, plotH, yFor: y};
-    const order = this.series.map((_, index) => index);
+    const order = this.series.map((_, index) => index).sort((a, b) => (this.series[a].z || 0) - (this.series[b].z || 0));
     if (this.activeSeries !== null) { order.splice(order.indexOf(this.activeSeries), 1); order.push(this.activeSeries); }
     order.forEach(index => {
       const s = this.series[index];
       ctx.save();
       ctx.globalAlpha = this.activeSeries === null || this.activeSeries === index ? 1 : .14;
-      ctx.beginPath(); ctx.strokeStyle = s.color; ctx.lineWidth = this.activeSeries === index ? 3.4 : 1.8; let started = false;
+      ctx.setLineDash(s.dash || []);
+      ctx.beginPath(); ctx.strokeStyle = s.color; ctx.lineWidth = this.activeSeries === index ? Math.max(3.6, (s.width || 1.8) + 1.4) : (s.width || 1.8); let started = false;
       this.points.forEach((p, i) => { const v = s.get(p); if (!finite(v)) return; if (!started) { ctx.moveTo(x(i), y(v)); started = true; } else ctx.lineTo(x(i), y(v)); });
-      ctx.stroke(); ctx.restore();
+      ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+    });
+    const endLabels = this.series.map((s, index) => {
+      for (let i = this.points.length - 1; i >= 0; i--) {
+        const v = s.get(this.points[i]);
+        if (finite(v)) return {s, index, value: v, pointX: x(i), rawY: y(v), labelY: y(v)};
+      }
+      return null;
+    }).filter(Boolean).sort((a, b) => a.rawY - b.rawY);
+    const minLabelY = pad.t + 7, maxLabelY = pad.t + plotH - 7, labelGap = 15;
+    endLabels.forEach((item, index) => { item.labelY = Math.max(item.rawY, index ? endLabels[index - 1].labelY + labelGap : minLabelY); });
+    if (endLabels.length && endLabels[endLabels.length - 1].labelY > maxLabelY) {
+      const overflow = endLabels[endLabels.length - 1].labelY - maxLabelY;
+      endLabels.forEach(item => { item.labelY -= overflow; });
+      for (let i = endLabels.length - 2; i >= 0; i--) endLabels[i].labelY = Math.min(endLabels[i].labelY, endLabels[i + 1].labelY - labelGap);
+    }
+    endLabels.forEach(item => {
+      ctx.save(); ctx.globalAlpha = this.activeSeries === null || this.activeSeries === item.index ? 1 : .22;
+      ctx.strokeStyle = item.s.color; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(item.pointX + 2, item.rawY); ctx.lineTo(w - pad.r + 7, item.labelY); ctx.stroke();
+      ctx.fillStyle = item.s.color; ctx.font = "600 10px sans-serif"; ctx.fillText(`${item.s.shortLabel || item.s.label} ${value(item.value)}`, w - pad.r + 11, item.labelY + 3); ctx.restore();
     });
     ctx.fillStyle = "#6f8981"; ctx.fillText(`最近 ${this.points.length} 帧`, pad.l, h - 6);
     if (this.hoverIndex !== null) {
@@ -148,20 +168,24 @@ class UwbRadar {
     const dpr = window.devicePixelRatio || 1, w = rect.width, h = Number(this.canvas.getAttribute("height")) || 270;
     this.canvas.width = Math.round(w * dpr); this.canvas.height = Math.round(h * dpr);
     const ctx = this.canvas.getContext("2d"); ctx.scale(dpr, dpr); ctx.clearRect(0, 0, w, h);
-    const cx = w / 2, cy = h * .77, radius = Math.min(w * .42, h * .62);
+    const cx = w / 2, cy = h * .51, radius = Math.max(60, Math.min(w * .42, h * .40));
     const distances = this.history.map(p => p.uwb?.distance).filter(finite);
     const currentDistance = this.sample?.uwb?.distance;
     const scaleDistance = Math.max(3, finite(currentDistance) ? currentDistance * 1.18 : 0, ...distances.slice(-60).map(v => v * 1.05));
     ctx.save();
     ctx.fillStyle = "rgba(75,203,211,.045)"; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radius, -Math.PI * .82, -Math.PI * .18); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = "rgba(169,213,197,.13)"; ctx.lineWidth = 1; ctx.setLineDash([3, 5]);
-    for (let ring = 1; ring <= 3; ring++) { const r = radius * ring / 3; ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, 2 * Math.PI); ctx.stroke(); ctx.fillStyle = "#668078"; ctx.font = "9px sans-serif"; ctx.fillText(`${(scaleDistance * ring / 3).toFixed(1)}m`, cx + 4, cy - r + 11); }
-    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, cy - radius); ctx.stroke(); ctx.setLineDash([]);
+    for (let ring = 1; ring <= 3; ring++) { const r = radius * ring / 3; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = "#668078"; ctx.font = "9px sans-serif"; ctx.fillText(`${(scaleDistance * ring / 3).toFixed(1)}m`, cx + 4, cy - r + 11); }
+    ctx.beginPath(); ctx.moveTo(cx, cy - radius); ctx.lineTo(cx, cy + radius); ctx.moveTo(cx - radius, cy); ctx.lineTo(cx + radius, cy); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = "#668078"; ctx.font = "9px sans-serif";
+    ctx.fillText("前", cx + 5, cy - radius + 10); ctx.fillText("后", cx + 5, cy + radius - 5);
+    ctx.fillText("左", cx - radius + 5, cy - 6); ctx.fillText("右", cx + radius - 14, cy - 6);
     const toPoint = p => {
       const distance = p.uwb?.distance, beta = p.uwb?.beta;
       if (!finite(distance) || !finite(beta)) return null;
       const r = Math.min(radius, distance / scaleDistance * radius);
-      return {x: cx + Math.sin(beta) * r, y: cy - Math.cos(beta) * r};
+      // UWB/机体系约定：正 beta、+Y 位于机器狗左侧；画布 x 正方向则向右。
+      return {x: cx - Math.sin(beta) * r, y: cy - Math.cos(beta) * r};
     };
     const trail = this.history.slice(-80).filter(p => p.uwb?.valid).map(toPoint).filter(Boolean);
     if (trail.length > 1) { ctx.beginPath(); trail.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.strokeStyle = "rgba(75,203,211,.42)"; ctx.lineWidth = 1.4; ctx.stroke(); }
@@ -175,16 +199,16 @@ class UwbRadar {
     }
     ctx.translate(cx, cy); ctx.fillStyle = "#dcebe6"; ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(10, 12); ctx.lineTo(0, 8); ctx.lineTo(-10, 12); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = "#4bcbd3"; ctx.lineWidth = 2.5; const command = this.sample?.command || {}; const vx = finite(command.vx) ? command.vx : 0, vy = finite(command.vy) ? command.vy : 0; const mag = Math.hypot(vx, vy);
-    if (mag > .005) { const arrowScale = Math.min(58, 22 + mag * 110); const ax = vy / mag * arrowScale, ay = -vx / mag * arrowScale; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ax, ay); ctx.stroke(); ctx.fillStyle = "#4bcbd3"; ctx.beginPath(); ctx.arc(ax, ay, 3, 0, Math.PI * 2); ctx.fill(); }
+    if (mag > .005) { const arrowScale = Math.min(58, 22 + mag * 110); const ax = -vy / mag * arrowScale, ay = -vx / mag * arrowScale; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ax, ay); ctx.stroke(); ctx.fillStyle = "#4bcbd3"; ctx.beginPath(); ctx.arc(ax, ay, 3, 0, Math.PI * 2); ctx.fill(); }
     ctx.restore();
     if (!point) { ctx.fillStyle = "rgba(255,107,107,.88)"; ctx.font = "600 13px sans-serif"; ctx.textAlign = "center"; ctx.fillText("当前没有可绘制的 UWB 目标", cx, h * .40); ctx.textAlign = "left"; }
   }
 }
 
 const speedChart = new LineChart($("speed-chart"), [
-  {label: "理论 vx", color: "#f1b953", get: p => p.command?.theory_vx},
-  {label: "发布 vx", color: "#4bcbd3", get: p => p.command?.vx},
-  {label: "实际/估算 vx", color: "#54e39a", get: p => p.feedback?.vx},
+  {label: "理论 vx", shortLabel: "理论", color: "#f1b953", width: 3.2, dash: [8, 5], z: 2, get: p => p.command?.theory_vx},
+  {label: "发布 vx", shortLabel: "发布", color: "#4bcbd3", width: 1.8, z: 1, get: p => p.command?.vx},
+  {label: "实际/估算 vx", shortLabel: "实际", color: "#54e39a", width: 2.3, z: 3, get: p => p.feedback?.vx},
 ], null, null, $("speed-legend"));
 const uwbChart = new LineChart($("uwb-chart"), [
   {label: "目标距离", color: "#4bcbd3", get: p => p.uwb?.distance},
@@ -216,6 +240,7 @@ function renderStatus(status) {
   currentCsvPath = csv.path || "";
   $("csv-path").textContent = currentCsvPath || "尚未找到";
   $("csv-age").textContent = finite(csv.age_s) ? `${csv.age_s.toFixed(2)} s` : "—";
+  renderSpeedQuality(status.speed_tracking, status.speed_metrics);
   updateUwbHealth(latestSample, latestUwbStatus);
   uwbRadar.update(latestSample, latestUwbStatus);
 }
@@ -256,8 +281,32 @@ function renderLatest(sample) {
   $("deadline-misses").textContent = p.deadline_misses ?? "—";
   $("consecutive-errors").textContent = p.consecutive_errors ?? "—";
   $("frame-id").textContent = `frame ${sample.frame ?? "—"}`;
+  updateSpeedGauges(sample);
   updateUwbHealth(sample, latestUwbStatus);
   uwbRadar.update(sample, latestUwbStatus);
+}
+
+function renderSpeedQuality(tracking, metrics) {
+  const card = $("speed-quality");
+  const state = tracking?.state || "unknown";
+  card.className = `speed-quality ${state}`;
+  card.querySelector("strong").textContent = tracking?.label || "等待速度反馈";
+  card.querySelector("p").textContent = tracking?.detail || "需要新鲜的实际速度数据";
+  if (finite(metrics?.mae_vx)) card.title = `vx MAE=${metrics.mae_vx.toFixed(3)}, vy MAE=${value(metrics.mae_vy)}, wz MAE=${value(metrics.mae_wz)}`;
+}
+
+function setGauge(id, current, range) {
+  const marker = $(id);
+  if (!finite(current)) { marker.style.opacity = ".18"; marker.style.left = "50%"; return; }
+  marker.style.opacity = "1";
+  marker.style.left = `${Math.max(0, Math.min(100, (current + range) / (2 * range) * 100))}%`;
+  marker.title = `${marker.title.split(":")[0]}: ${current.toFixed(3)}`;
+}
+
+function updateSpeedGauges(sample) {
+  const c = sample?.command || {}, f = sample?.feedback || {};
+  setGauge("gauge-vx-theory", c.theory_vx, .35); setGauge("gauge-vx-command", c.vx, .35); setGauge("gauge-vx-actual", f.valid ? f.vx : null, .35);
+  setGauge("gauge-wz-theory", c.theory_wz, 1.0); setGauge("gauge-wz-command", c.wz, 1.0); setGauge("gauge-wz-actual", f.valid ? f.wz : null, 1.0);
 }
 
 function setCheck(id, state, text) {

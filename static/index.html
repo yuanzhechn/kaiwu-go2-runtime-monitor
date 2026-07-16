@@ -32,6 +32,14 @@
     <section class="hero-grid">
       <article class="panel speed-panel">
         <div class="panel-head"><div><p class="eyebrow">VELOCITY</p><h2>速度对比</h2></div><span id="feedback-source" class="pill">无反馈</span></div>
+        <div class="speed-glance">
+          <div id="speed-quality" class="speed-quality unknown"><small>近 50 帧跟速判断</small><strong>等待速度反馈</strong><p>需要新鲜的实际速度数据</p></div>
+          <div class="speed-gauges">
+            <div class="speed-gauge" data-gauge="vx"><div class="gauge-title"><strong>vx</strong><span>-0.35</span><span>0</span><span>+0.35 m/s</span></div><div class="gauge-track"><i class="gauge-zero"></i><i id="gauge-vx-theory" class="gauge-marker theory" title="理论 vx"></i><i id="gauge-vx-command" class="gauge-marker command" title="发布 vx"></i><i id="gauge-vx-actual" class="gauge-marker actual" title="实际 vx"></i></div></div>
+            <div class="speed-gauge" data-gauge="wz"><div class="gauge-title"><strong>wz</strong><span>-1.0</span><span>0</span><span>+1.0 rad/s</span></div><div class="gauge-track"><i class="gauge-zero"></i><i id="gauge-wz-theory" class="gauge-marker theory" title="理论 wz"></i><i id="gauge-wz-command" class="gauge-marker command" title="发布 wz"></i><i id="gauge-wz-actual" class="gauge-marker actual" title="实际 wz"></i></div></div>
+            <div class="gauge-key"><span class="theory">理论</span><span class="command">发布</span><span class="actual">实际/估算</span><em>三个标记分层显示，重合也不会互相遮住</em></div>
+          </div>
+        </div>
         <div class="velocity-values">
           <div><small>理论 vx</small><strong id="theory-vx">—</strong><em>m/s</em></div>
           <div><small>发布 vx</small><strong id="command-vx">—</strong><em>m/s</em></div>
